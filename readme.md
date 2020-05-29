@@ -18,7 +18,7 @@
     *　缺点：推断速度比较慢
         
 exampe:
-> wrong: 专家公步虎门大桥涡振原因
+> wrong: 专家公步虎门大桥涡振原因  
 > right: 专家公步虎门大桥涡振原因
 #### 数据
 1. 引用自https://github.com/iqiyi/FASPell里面的数据,所有数据打包在data/origin_data.zip  
