@@ -5,8 +5,6 @@
     * correction_basic.py
     * 缺点: 
        1. 不能解决多字,少字问题
-       2. 容易导致错误积累
-       3. 最好配合错误检测算法,语言模型完成错误纠正功能 
 2. MLM  
     correction_mlm.py
     利用bert的MLM训练机制实现纠错功能  
@@ -19,7 +17,9 @@
     输出: 正确句子  
     *　缺点：推断速度比较慢
         
-    
+exampe:
+> wrong: 专家公步虎门大桥涡振原因
+> right: 专家公步虎门大桥涡振原因
 #### 数据
 1. 引用自https://github.com/iqiyi/FASPell里面的数据,所有数据打包在data/origin_data.zip  
 2. 可以尝试自己构建纠错数据集,data/char_meta.txt提供了汉字的字音和字形数据.  
