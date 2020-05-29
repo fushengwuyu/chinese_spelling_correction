@@ -10,6 +10,8 @@ from keras.layers import Lambda
 from keras.models import Model
 from keras.callbacks import Callback
 import keras.backend as K
+import numpy as np
+from tqdm import tqdm
 
 max_len = 64
 config_path = '/home/chenbing/pretrain_models/bert/chinese_L-12_H-768_A-12/bert_config.json'
@@ -87,9 +89,40 @@ model.compile(loss=masked_cross_entropy, optimizer=AdaFactor(learning_rate=1e-3)
 model.summary()
 
 
+def ge_answer(wrong):
+    """
+    解码
+    :param wrong:
+    :return:
+    """
+    wrong_token_ids, _ = tokenizer.encode(wrong)
+    token_ids = wrong_token_ids + [tokenizer._token_mask_id] * max_len + [tokenizer._token_end_id]
+    segemnt_ids = [0] * len(token_ids)
+    probas = model.predict([np.array([token_ids]), np.array([segemnt_ids])])[0]
+    proba_ids = probas.argmax(axis=1)
+    useful_index = proba_ids[np.where(proba_ids != 3)]
+    if any(useful_index):
+        answer = tokenizer.decode(useful_index)
+    else:
+        answer = tokenizer.decode(proba_ids[:len(wrong)])
+    return answer
+
+
+def evalute(valid_data):
+    X, Y = 1e-10, 1e-10
+    for item in tqdm(valid_data):
+        wrong, right = item
+        pred = ge_answer(wrong)
+        X += pred == right
+        Y += 1
+    precision = X / Y
+    return precision
+
+
 class Evaluator(Callback):
     def __init__(self):
         self.lowest = 1e10
+        self.f1 = 1e-10
 
     def on_epoch_end(self, epoch, logs=None):
         if logs['loss'] <= self.lowest:
@@ -98,12 +131,19 @@ class Evaluator(Callback):
 
 
 if __name__ == '__main__':
-    evaluator = Evaluator()
-    train_generator = MyDataGenerator(train_data, batch_size=8)
+    # 训练模型
+    # evaluator = Evaluator()
+    # train_generator = MyDataGenerator(train_data, batch_size=8)
+    #
+    # model.fit_generator(
+    #     train_generator.forfit(),
+    #     steps_per_epoch=len(train_generator),
+    #     epochs=10,
+    #     callbacks=[evaluator]
+    # )
 
-    model.fit_generator(
-        train_generator.forfit(),
-        steps_per_epoch=len(train_generator),
-        epochs=10,
-        callbacks=[evaluator]
-    )
+    # predict
+    model.load_weights('models/best_mlm_model.h5')
+    wrong = '追风少俊年王俊凯'
+    result = ge_answer(wrong)
+    print(result)

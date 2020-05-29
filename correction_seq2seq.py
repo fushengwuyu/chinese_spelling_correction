@@ -8,6 +8,7 @@ from bert4keras.snippets import DataGenerator, sequence_padding
 from bert4keras.optimizers import AdaFactor
 from keras.callbacks import Callback
 import keras.backend as K
+from tqdm import tqdm
 
 max_len = 64
 config_path = '/home/chenbing/pretrain_models/bert/chinese_L-12_H-768_A-12/bert_config.json'
@@ -69,6 +70,36 @@ cross_entropy = K.sum(cross_entropy * y_mask) / K.sum(y_mask)
 model.add_loss(cross_entropy)
 model.compile(optimizer=AdaFactor(learning_rate=1e-3))
 model.summary()
+
+
+def ge_answer(wrong):
+    """
+    解码
+    :param wrong:
+    :return:
+    """
+    wrong_token_ids, _ = tokenizer.encode(wrong)
+    token_ids = wrong_token_ids + [tokenizer._token_mask_id] * max_len + [tokenizer._token_end_id]
+    segemnt_ids = [0] * len(token_ids)
+    probas = model.predict([np.array([token_ids]), np.array([segemnt_ids])])[0]
+    proba_ids = probas.argmax(axis=1)
+    useful_index = proba_ids[np.where(proba_ids != 3)]
+    if any(useful_index):
+        answer = tokenizer.decode(useful_index)
+    else:
+        answer = tokenizer.decode(proba_ids[:len(wrong)])
+    return answer
+
+
+def evalute(valid_data):
+    X, Y = 1e-10, 1e-10
+    for item in tqdm(valid_data):
+        wrong, right = item
+        pred = ge_answer(wrong)
+        X += pred == right
+        Y += 1
+    precision = X / Y
+    return precision
 
 
 class Evaluator(Callback):
