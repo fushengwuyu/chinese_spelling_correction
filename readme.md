@@ -19,7 +19,7 @@
         
 exampe:
 > wrong: 专家公步虎门大桥涡振原因  
-> right: 专家公步虎门大桥涡振原因
+> right: 专家公布虎门大桥涡振原因
 #### 数据
 1. 引用自https://github.com/iqiyi/FASPell里面的数据,所有数据打包在data/origin_data.zip  
 2. 可以尝试自己构建纠错数据集,data/char_meta.txt提供了汉字的字音和字形数据.  
